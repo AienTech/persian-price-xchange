@@ -14,6 +14,10 @@ export const registeredKeys = {
 		name: 'لیر',
 		type: 'TRY'
 	},
+	price_aed: {
+		name: 'درهم امارات',
+		type: 'AED'
+	},
 	[DEFAULT_CURRENCY]: {
 		name: DEFAULT_CURRENCY_NAME,
 		id: 'toman'
