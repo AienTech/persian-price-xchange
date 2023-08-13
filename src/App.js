@@ -41,7 +41,7 @@ function App()
     <div className='flex flex-col'>
       <div className='my-8'>
         <div className='flex flex-row-reverse items-center justify-center'>
-          <input className='border p-3 ltr' value={rootValue} onChange={e => setRootValue(e.target.value)} />
+          <input type='number' className='border p-3 ltr' value={rootValue} onChange={e => setRootValue(e.target.value)} />
           <span className='p-3'>{selectedCurrency.name}</span>
         </div>
       </div>
