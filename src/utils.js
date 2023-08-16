@@ -20,7 +20,8 @@ export const registeredKeys = {
 	},
 	[DEFAULT_CURRENCY]: {
 		name: DEFAULT_CURRENCY_NAME,
-		id: 'toman'
+		id: 'toman',
+		type: "IRR"
 	}
 };
 
@@ -31,19 +32,19 @@ export const transformPrices = (prices) =>
 		.filter(k => Object.keys(registeredKeys).includes(k))
 		.map(k =>
 		{
-			const amount = parseInt(prices[k].p?.replace(",", "") || "0") / 10;
+			const price = parseInt(prices[k].p?.replace(",", "") || "0") / 10;
 
 			return {
 				...registeredKeys[k],
 				id: k,
-				amount,
+				price,
 			};
 		});
 
 	priceList.push({
 		id: 'toman',
 		name: registeredKeys.toman.name,
-		amount: 1
+		price: 1
 	});
 
 	return priceList;
@@ -59,5 +60,17 @@ export function getExchangeRate(c1, c2, currencies)
 		throw new Error('invalid currency IDs provided');
 	}
 
-	return currency1.amount / currency2.amount;
+	return currency1.price / currency2.price;
 }
+
+export function parseNumberToCurrencyFormat(num, currency)
+{
+	return parseFloat(num)
+		.toFixed(2)
+		.toLocaleString('fa-IR', {
+			type: 'currency',
+			currency: currency.type,
+			minimumFractionDigits: currency.id === DEFAULT_CURRENCY ? 0 : 2,
+			useGrouping: 'always',
+		});
+} 

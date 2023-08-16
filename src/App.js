@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { registeredKeys, transformPrices, DEFAULT_CURRENCY, getExchangeRate } from './utils';
+import { registeredKeys, transformPrices, DEFAULT_CURRENCY, getExchangeRate, parseNumberToCurrencyFormat } from './utils';
 
 function App()
 {
@@ -30,7 +30,7 @@ function App()
     {
       const newPriceList = originalCurrencies.map(p => ({
         ...p,
-        amount: selectedCurrency.amount / p.amount
+        price: selectedCurrency.price / p.price
       }));
 
       setCurrencies(newPriceList);
@@ -38,68 +38,78 @@ function App()
   }, [selectedCurrency]);
 
   return (
-    <div className='flex flex-col'>
-      <div className='my-8'>
-        <div className='flex flex-row-reverse items-center justify-center'>
-          <input type='number' className='border p-3 ltr' value={rootValue} onChange={e => setRootValue(e.target.value)} />
-          <span className='p-3'>{selectedCurrency.name}</span>
+    <>
+      <div className="py-10 px-4">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-gray-700">مبدل ارز</h1>
+          <p className="text-gray-500">ارزهای رایج رو به قیمت بازار آزاد روز به هم تبدیل کنید</p>
         </div>
-      </div>
-      <div className="w-full divide-y divide-gray-200 overflow-hidden">
-        <div className="bg-gray-50 hidden md:flex py-3">
-          <div className="px-6 flex-1 text-center font-medium text-gray-500 uppercase tracking-wider">نام ارز</div>
-          <div className="px-6 flex-1 text-center font-medium text-gray-500 uppercase tracking-wider">قیمت</div>
-          <div className="px-6 flex-1 text-center font-medium text-gray-500 uppercase tracking-wider"></div>
-        </div>
-        <div>
-          {
-            currencies.map((currency, idx) =>
-            {
-              return (
-                <div key={idx} className="md:flex md:flex-row flex-col text-center py-4 border-b items-center">
-                  <div className="md:flex-1 font-medium md:tracking-wider px-6 whitespace-nowrap">{currency.name}</div>
-                  <div className="md:flex-1 md:tracking-wider px-6 whitespace-nowrap rtl text-center justify-between">
-                    {
-                      rootValue === ''
-                        ? <span>{currency.amount.toLocaleString('en-US', {
-                          type: 'currency',
-                          currency: currency.type,
-                          minimumFractionDigits: currency.id === DEFAULT_CURRENCY ? 0 : 2,
-                          useGrouping: 'always',
-                        })} {selectedCurrency.name}</span>
-                        : <>
-                          <span className='m-1'>{rootValue}</span>
-                          <span className='m-1'>{selectedCurrency.name}</span>
-                          <span className='m-1'>=</span>
-                          <span className='m-1'>
-                            {parseFloat(parseFloat(
-                              rootValue === 1
-                                ? 1 / currency.amount
-                                : getExchangeRate(selectedCurrency.id, currency.id, originalCurrencies) * rootValue
-                            ).toFixed(2)).toLocaleString('en-US', {
-                              type: 'currency',
-                              currency: currency.type,
-                              minimumFractionDigits: currency.id === DEFAULT_CURRENCY ? 0 : 2,
-                              useGrouping: 'always',
-                            })}
-                          </span>
-                          <span className='m-1'>{currency.name}</span>
-                        </>
-                    }
-                  </div>
-                  <div className="md:flex-1 md:tracking-wider px-6 whitespace-nowrap">
-                    <button
-                      onClick={() => setSelectedCurrency(currency)}
-                      className='m-2 p-2 bg-blue-600 text-blue-50 rounded'>{`انتخاب ${currency.name} به عنوان ارز مبدا`}</button>
-                  </div>
-                </div>
-              );
-            })
-          }
-        </div>
-      </div>
 
-    </div>
+        <div className="max-w-2xl mx-auto bg-white p-6 rounded-md shadow-md">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-3">قیمت‌های روز:</h2>
+            <ul>
+              {currencies.filter(c => c.id !== selectedCurrency.id).map(currency => (
+                <li key={currency.id} className="flex justify-between">
+                  <span className="text-gray-600">{currency.name}:</span>
+                  <span className="text-gray-800">{parseNumberToCurrencyFormat(currency.price, currency)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mb-6">
+            <label htmlFor="defaultCurrency" className="block text-gray-600 mb-2">ارز مبدا رو انتخاب کنید:</label>
+            <select
+              id="defaultCurrency"
+              className="w-full p-2 border rounded-md"
+              value={selectedCurrency.id}
+              onChange={(e) => setSelectedCurrency(originalCurrencies.find(c => c.id === e.target.value))}
+            >
+              {currencies.map(currency => (
+                <option key={currency.id} value={currency.id}>
+                  {currency.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mb-6">
+            <label htmlFor="amount" className="block text-gray-600 mb-2">مقدار مورد نیاز:</label>
+            <input
+              type="number"
+              id="amount"
+              className="w-full p-2 border rounded-md"
+              placeholder="مقدار مورد نیاز شما برای تبدیل"
+              value={rootValue}
+              onChange={(e) => setRootValue(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold mb-3">قیمت‌های تبدیل شده:</h2>
+            <ul>
+              {currencies.filter(c => c.id !== selectedCurrency.id).map((currency) => (
+                <li key={currency.id} className="flex justify-between">
+                  <span className="text-gray-600">{currency.name}:</span>
+                  <span className="text-gray-800">{
+                    rootValue === ''
+                      ? <span>{parseNumberToCurrencyFormat(currency.price, currency)}</span>
+                      : <p>
+                        {parseNumberToCurrencyFormat((
+                          parseFloat(rootValue) === 1
+                            ? 1 / currency.price
+                            : getExchangeRate(selectedCurrency.id, currency.id, originalCurrencies) * rootValue
+                        ), currency)}
+                      </p>
+                  }</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 
