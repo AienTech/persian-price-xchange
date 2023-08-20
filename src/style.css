@@ -9,3 +9,7 @@
 .ltr {
 	direction: ltr;
 }
+
+body {
+	@apply bg-gray-100;
+}

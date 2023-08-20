@@ -1,55 +1,3 @@
-export const DEFAULT_CURRENCY = 'toman';
-export const DEFAULT_CURRENCY_NAME = 'تومان';
-
-export const registeredKeys = {
-	price_dollar_dt: {
-		name: 'دلار',
-		type: 'USD'
-	},
-	price_eur: {
-		name: 'یورو',
-		type: 'EUR'
-	},
-	price_try: {
-		name: 'لیر',
-		type: 'TRY'
-	},
-	price_aed: {
-		name: 'درهم امارات',
-		type: 'AED'
-	},
-	[DEFAULT_CURRENCY]: {
-		name: DEFAULT_CURRENCY_NAME,
-		id: 'toman',
-		type: "IRR"
-	}
-};
-
-
-export const transformPrices = (prices) =>
-{
-	const priceList = Object.keys(prices)
-		.filter(k => Object.keys(registeredKeys).includes(k))
-		.map(k =>
-		{
-			const price = parseInt(prices[k].p?.replace(",", "") || "0") / 10;
-
-			return {
-				...registeredKeys[k],
-				id: k,
-				price,
-			};
-		});
-
-	priceList.push({
-		id: 'toman',
-		name: registeredKeys.toman.name,
-		price: 1
-	});
-
-	return priceList;
-};
-
 export function getExchangeRate(c1, c2, currencies)
 {
 	const currency1 = currencies.find(currency => currency.id === c1);
@@ -63,14 +11,26 @@ export function getExchangeRate(c1, c2, currencies)
 	return currency1.price / currency2.price;
 }
 
-export function parseNumberToCurrencyFormat(num, currency)
+export function parseNumberToCurrencyFormat(num, currency, currencies)
 {
 	return parseFloat(num)
 		.toFixed(2)
 		.toLocaleString('fa-IR', {
 			type: 'currency',
 			currency: currency.type,
-			minimumFractionDigits: currency.id === DEFAULT_CURRENCY ? 0 : 2,
+			minimumFractionDigits: currency.id === currencies.find(c => c.default).id ? 0 : 2,
 			useGrouping: 'always',
 		});
-} 
+}
+
+export async function fetchPrices()
+{
+	const response = await fetch('https://windmil.sys.aien.me/api/w/playground/jobs/run_wait_result/p/f/public_services/live_prices?token=M3Nsa4RzxguOuezlXLaMAU6DDX1Ny2');
+
+	if (!response.ok)
+	{
+		throw new Error('Network response was not ok');
+	}
+
+	return response.json();
+}
